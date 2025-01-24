@@ -1,4 +1,4 @@
-# Nurse Assistance Robot
+# Medical Task Assistant Robot
 ---
 
 ## Project Purpose
@@ -15,3 +15,14 @@ The **Autonomous Medication Distribution Robot** focuses on the following key ob
   - Blood pressure
   - Body temperature
 - These metrics can be used for real-time monitoring and future AI-driven personalization.
+
+- ### 3. Reliable Communication & Control
+- Communication between the robot and the system relies on:
+  - Wi-Fi for real-time updates
+  - SSH for remote access
+  - Wired connections for initial setups and data transfer
+- Ensures smooth operation and high reliability in hospital settings.
+
+### 4. Future Enhancements
+- AI-driven pill scheduling and distribution based on patient health data for personalized care plans.
+
