@@ -26,3 +26,6 @@ The **Autonomous Medication Distribution Robot** focuses on the following key ob
 ### 4. Future Enhancements
 - AI-driven pill scheduling and distribution based on patient health data for personalized care plans.
 
+### 5. Diagrams
+- BPM Diagram:
+![BPM Diagram](docs/bpm.png)
