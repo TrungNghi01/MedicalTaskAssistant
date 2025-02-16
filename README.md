@@ -31,10 +31,12 @@ The **Autonomous Medication Distribution Robot** focuses on the following key ob
 ![BPM Diagram](docs/bpm.png)
 
 ### 6. Model Info
+
+- The files for creation of model is in the Model folder in github. There are 2 files for training the Model (i) "Gpt-v1.ipynb", (ii) "training.py" and iii) 'extraction' is used for conversion of dataset.
 - The original site for dataset used in training process is 'https://huggingface.co/datasets/Skylion007/openwebtext' but we couldn't find the file there so had to do other research.
 - The actual site from where I have downloaded the data set (OpenWebText) is refered in Basecamp reference section.
 - The zip file of Openwebtex is then extracted and it is in .xz format.
-- Our Extraction.py file is used to convert the .xz format file into .txt file. Make sure you have installed "tqdm" library for python to run the extraction.py file. **Condition to run this is you must have python version 3.9.12 because "lzma" or "pylzma" is only available below 3.9.12 version of python.
+- Our extraction.py file is used to convert the .xz format file into .txt file. Make sure you have installed "tqdm" library for python to run the extraction.py file. **Condition to run this is you must have python version 3.9.12 because "lzma" or "pylzma" is only available below 3.9.12 version of python.
 - Then 3 files will be extracted from extraction.py "train_split.txt", "val_split.txt" and "vocab.txt". Make sure to save them in folder named as 'train' so it will be easier for you to understand it.
 - Now we are installing the pytorch with cuda with this command "pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126"
 - Here, we will see some changes in "Gpt-v1.ipynb" and "training.py" those are 'n_head' and 'n_layer', where 1 is the minimum and 8 is the maximum you can keep so that it doesn't affect your GPU more.
