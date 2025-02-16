@@ -32,7 +32,7 @@ The **Autonomous Medication Distribution Robot** focuses on the following key ob
 
 ### 6. Model Info
 
-- The files for creation of model is in the Model folder in github. There are 2 files for training the Model (i) "Gpt-v1.ipynb", (ii) "training.py" and iii) 'extraction' is used for conversion of dataset.
+- The files for creation of model is in the Model folder in github. There are 2 files for training the Model (i) "Gpt-v1.ipynb", (ii) "training.py" and (iii) 'extraction' is used for conversion of dataset.
 - The original site for dataset used in training process is 'https://huggingface.co/datasets/Skylion007/openwebtext' but we couldn't find the file there so had to do other research.
 - The actual site from where I have downloaded the data set (OpenWebText) is refered in Basecamp reference section.
 - The zip file of Openwebtex is then extracted and it is in .xz format.
