@@ -25,7 +25,7 @@ files_train = files[:split_index]
 files_val = files[split_index:]
 vocab = set()
 
-with open(output_file_train, "w", encoding="utf-8") as outfile:
+with open(train_split, "w", encoding="utf-8") as outfile:
     for filename in tqdm(files_train, total=len(files_train)):
         file_path = os.path.join(folder_path, filename)
         with lzma.open(file_path, 'rt', encoding='utf-8') as infile:
@@ -33,7 +33,7 @@ with open(output_file_train, "w", encoding="utf-8") as outfile:
             outfile.write(text)
             vocab.update(set(text))
 
-with open(output_file_val, "w", encoding="utf-8") as outfile:
+with open(val_split, "w", encoding="utf-8") as outfile:
     for filename in tqdm(files_val, total=len(files_val)):
         file_path = os.path.join(folder_path, filename)
         with lzma.open(file_path, 'rt', encoding='utf-8') as infile:
