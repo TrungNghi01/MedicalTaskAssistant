@@ -31,7 +31,7 @@ The **Autonomous Medication Distribution Robot** focuses on the following key ob
 ![BPM Diagram](docs/bpm.png)
 
 ### 6. Model Info
-- The original site for dataset used in training process is 'https://huggingface.co/datasets/Skylion007/openwebtext' but we couldn't ind the file there so had to do other research.
+- The original site for dataset used in training process is 'https://huggingface.co/datasets/Skylion007/openwebtext' but we couldn't find the file there so had to do other research.
 - The actual site from where I have downloaded the data set (OpenWebText) is refered in Basecamp reference section.
 - The zip file of Openwebtex is then extracted and it is in .xz format.
 - Our Extraction.py file is used to convert the .xz format file into .txt file. Make sure you have installed "tqdm" library for python to run the extraction.py file. **Condition to run this is you must have python version 3.9.12 because "lzma" or "pylzma" is only available below 3.9.12 version of python.
