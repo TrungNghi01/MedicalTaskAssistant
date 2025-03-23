@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MedMax Voice Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #111;
+            color: white;
+        }
+        .chat-container {
+            background-color: rgba(30, 30, 40, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 20px rgba(0, 140, 255, 0.2);
+            margin-bottom: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid rgba(0, 140, 255, 0.3);
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .user-message {
+            background-color: rgba(0, 140, 255, 0.2);
+            margin-left: 20%;
+            border-left: 3px solid #0088ff;
+            color: #eee;
+        }
+        .bot-message {
+            background-color: rgba(40, 40, 50, 0.9);
+            margin-right: 20%;
+            border-left: 3px solid #44bbff;
+            color: #eee;
+        }
+        .input-container {
+            display: flex;
+            margin-top: 10px;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid rgba(0, 140, 255, 0.4);
+            border-radius: 20px;
+            outline: none;
+            background-color: rgba(20, 20, 30, 0.8);
+            color: white;
+        }
+        button {
+            background-color: #0088ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-left: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: #00a0ff;
+            box-shadow: 0 0 10px rgba(0, 160, 255, 0.5);
+        }
+        #voice-button {
+            background-color: #0088ff;
+            position: relative;
+        }
+        #voice-button:hover {
+            background-color: #00a0ff;
+        }
+        #voice-button.listening {
+            background-color: #ff3b30;
+            animation: pulse 1.5s infinite;
+        }
+        #voice-button.always-listening {
+            background-color: #34c759;
+            animation: subtle-pulse 2s infinite;
+        }
+        #direct-listen-btn {
+            background-color: #9c27b0;
+        }
+        #direct-listen-btn:hover {
+            background-color: #7b1fa2;
+            box-shadow: 0 0 10px rgba(123, 31, 162, 0.5);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 5px rgba(255, 59, 48, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 59, 48, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 5px rgba(255, 59, 48, 0.5); }
+        }
+        @keyframes subtle-pulse {
+            0% { box-shadow: 0 0 5px rgba(52, 199, 89, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(52, 199, 89, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(52, 199, 89, 0.3); }
+        }
+        h1 {
+            color: #0088ff;
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 140, 255, 0.5);
+        }
+        .loader {
+            display: none;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #0088ff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .connection-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+        .controls-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            background-color: rgba(30, 30, 40, 0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        .voice-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #voice-status {
+            margin-left: 10px;
+            font-size: 14px;
+            color: #0088ff;
+        }
+        #speak-toggle {
+            margin-left: 10px;
+            cursor: pointer;
+            accent-color: #0088ff;
+        }
+        /* Speech visualization styles */
+        #visualizer-container {
+            height: 60px;
+            width: 100%;
+            background-color: rgba(20, 20, 30, 0.5);
+            border-radius: 10px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 140, 255, 0.2);
+        }
+        .visualizer-bar {
+            position: absolute;
+            bottom: 0;
+            background-color: #0088ff;
+            width: 6px;
+            border-radius: 3px 3px 0 0;
+            transition: height 0.1s ease;
+        }
+        /* Wake word indicator */
+        .wake-word-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(30, 30, 40, 0.9);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transition: all 0.3s;
+            opacity: 0.7;
+        }
+        .wake-word-indicator.active {
+            background-color: #0088ff;
+            box-shadow: 0 0 20px rgba(0, 140, 255, 0.8);
+            opacity: 1;
+        }
+        .wake-word-indicator .inner-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(20, 20, 30, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .wake-word-indicator i {
+            color: #aaa;
+            font-size: 20px;
+        }
+        .wake-word-indicator.active i {
+            color: white;
+        }
+        /* Command indicator */
+        .commands-list {
+            background-color: rgba(30, 30, 40, 0.9);
+            border-radius: 10px;
+            margin-top: 15px;
+            padding: 10px 15px;
+            border: 1px solid rgba(0, 140, 255, 0.3);
+        }
+        .commands-list h3 {
+            color: #0088ff;
+            margin-top: 0;
+            font-size: 16px;
+            font-weight: normal;
+        }
+        .commands-list ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #ddd;
+        }
+        .commands-list li {
+            margin-bottom: 5px;
+        }
+        .keyword {
+            color: #0088ff;
+            font-weight: bold;
+        }
+        /* System message style */
+        .system-message {
+            color: #888;
+            text-align: center;
+            font-style: italic;
+            margin: 10px 0;
+            animation: fadeIn 0.5s ease;
+        }
+        /* Active visualizer animation */
+        @keyframes active-visualizer {
+            0% { box-shadow: 0 0 5px rgba(0, 140, 255, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(0, 140, 255, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(0, 140, 255, 0.3); }
+        }
+        #visualizer-container.active {
+            animation: active-visualizer 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="wake-word-indicator" id="wake-indicator">
+        <div class="inner-circle">
+            <i class="fas fa-microphone"></i>
+        </div>
+    </div>
+
+    <h1>MedMax Voice Assistant</h1>
+    
+    <div id="visualizer-container"></div>
+    
+    <div class="chat-container" id="chat-container">
+        <div class="message bot-message">Hello! I'm MedMax, your voice assistant. Say "Hey MAx" or "OK Max" to activate me.</div>
+        <div class="system-message">The system is listening for the wake word...</div>
+    </div>
+    
+    <div class="input-container">
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+        <button id="voice-button" onclick="toggleAlwaysListening()">
+            <i class="fas fa-microphone"></i> <span id="listen-mode">Always Listen</span>
+        </button>
+        <div class="loader" id="loader"></div>
+    </div>
+    
+    <div class="controls-container">
+        <div class="voice-controls">
+            <span id="voice-status">Listening for wake word...</span>
+            <label for="speak-toggle">
+                <input type="checkbox" id="speak-toggle" checked>
+                Voice responses
+            </label>
+        </div>
+    </div>
+    
+    <div class="commands-list">
+        <h3>Available Voice Commands:</h3>
+        <ul>
+            <li>Say <span class="keyword">"Hey Max"</span> or <span class="keyword">"OK Max"</span> to wake me up</li>
+            <li>Ask any medical question after wake word</li>
+            <li>Say <span class="keyword">"Stop listening"</span> to pause active listening</li>
+            <li>Say <span class="keyword">"Clear chat"</span> to clear the chat history</li>
+            <li>Say <span class="keyword">"Mute"</span> or <span class="keyword">"Unmute"</span> to control voice responses</li>
+        </ul>
+    </div>
+    
+    <div class="connection-info">
+        Using secure HTTPS connection. Certificate warning is normal for self-signed certificates.
+    </div>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <script>
+        let apiUrl = window.location.protocol + '//' + window.location.host + '/generate';
+        let recognition;
+        let wakeWordRecognition;
+        let isListening = false;
+        let isAlwaysListening = false;
+        let wakePhrases = ["hey max", "ok max", "hello max", "hi max"];
+        let pendingQuery = null;
+        
+        // Create audio context for visualizer
+        let audioContext;
+        let analyser;
+        let microphone;
+        let javascriptNode;
+        let visualizerBars = [];
+        const NUM_BARS = 50;
+        
+        // Initialize speech recognition
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Your browser doesn't support speech recognition. Please try Chrome.");
+                document.getElementById('voice-button').disabled = true;
+                updateVoiceStatus('Voice recognition not supported in this browser');
+                return;
+            }
+            
+            // Set up wake word recognition
+            wakeWordRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            wakeWordRecognition.continuous = true;
+            wakeWordRecognition.interimResults = true;
+            wakeWordRecognition.lang = 'en-US';
+            
+            wakeWordRecognition.onresult = function(event) {
+                let transcript = '';
+                let isFinal = false;
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript.toLowerCase();
+                    isFinal = event.results[i].isFinal;
+                }
+                
+                console.log("Wake listener heard: " + transcript);
+                
+                // Display what the wake word listener is hearing
+                updateWakeWordDisplay(transcript);
+                
+                // Check if wake word is detected
+                if (transcript && wakePhrases.some(phrase => transcript.includes(phrase))) {
+                    console.log("Wake word detected!");
+                    
+                    // Extract the part after the wake word
+                    let query = '';
+                    for (const phrase of wakePhrases) {
+                        if (transcript.includes(phrase)) {
+                            query = transcript.split(phrase)[1]?.trim() || '';
+                            break;
+                        }
+                    }
+                    
+                    // Stop wake word recognition
+                    wakeWordRecognition.stop();
+                    
+                    // Show wake word activation
+                    activateWakeIndicator();
+                    
+                    // Add system message
+                    addSystemMessage("Wake word detected! Listening for your command...");
+                    
+                    if (query) {
+                        // If there's a query in the wake phrase, use it
+                        pendingQuery = query;
+                        setTimeout(() => {
+                            processVoiceCommand(query);
+                            startWakeWordRecognition();
+                        }, 500);
+                    } else {
+                        // Otherwise start command recognition
+                        startCommandRecognition();
+                    }
+                }
+            };
+            
+            wakeWordRecognition.onend = function() {
+                if (isAlwaysListening && !isListening) {
+                    console.log("Restarting wake word recognition...");
+                    setTimeout(() => {
+                        try {
+                            wakeWordRecognition.start();
+                        } catch (e) {
+                            console.error("Error restarting wake word recognition:", e);
+                        }
+                    }, 100);
+                }
+            };
+            
+            wakeWordRecognition.onerror = function(event) {
+                console.error("Wake word recognition error:", event.error);
+                if (event.error !== 'no-speech') {
+                    addSystemMessage("Voice recognition error: " + event.error);
+                }
+            };
+            
+            // Set up main command recognition
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onresult = function(event) {
+                // Get interim results
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // Display what's being said in real-time
+                const text = finalTranscript || interimTranscript;
+                document.getElementById('user-input').value = text;
+                
+                // Update the live display
+                updateLiveTranscript(text, event.results[0].isFinal);
+                
+                // If final result is available, process it
+                if (finalTranscript) {
+                    processVoiceCommand(finalTranscript);
+                }
+            };
+            
+            recognition.onend = function() {
+                isListening = false;
+                document.getElementById('voice-button').classList.remove('listening');
+                deactivateWakeIndicator();
+                
+                // Go back to wake word listening if in always-listen mode
+                if (isAlwaysListening) {
+                    startWakeWordRecognition();
+                }
+            };
+            
+            recognition.onerror = function(event) {
+                console.error("Command recognition error:", event.error);
+                if (event.error !== 'no-speech') {
+                    addSystemMessage("Command recognition error: " + event.error);
+                }
+                
+                isListening = false;
+                document.getElementById('voice-button').classList.remove('listening');
+                
+                // Go back to wake word listening if in always-listen mode
+                if (isAlwaysListening) {
+                    startWakeWordRecognition();
+                }
+            };
+            
+            // Start always-listening mode by default
+            toggleAlwaysListening();
+            createVisualizer();
+        }
+        
+        // Create audio visualizer
+        function createVisualizer() {
+            const container = document.getElementById('visualizer-container');
+            
+            // Create bars
+            for (let i = 0; i < NUM_BARS; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'visualizer-bar';
+                bar.style.left = (i * (100 / NUM_BARS)) + '%';
+                bar.style.height = '0px';
+                container.appendChild(bar);
+                visualizerBars.push(bar);
+            }
+            
+            // Random animation when not actually processing audio
+            setInterval(() => {
+                if (isAlwaysListening) {
+                    animateVisualizer();
+                }
+            }, 100);
+        }
+        
+        // Animate visualizer with random heights when idle
+        function animateVisualizer() {
+            const isActive = isListening || document.getElementById('wake-indicator').classList.contains('active');
+            const maxHeight = isActive ? 60 : 10;
+            
+            for (let i = 0; i < visualizerBars.length; i++) {
+                const height = Math.floor(Math.random() * maxHeight);
+                visualizerBars[i].style.height = height + 'px';
+                
+                // Add color variation
+                const blue = isActive ? '255' : '136';
+                const opacity = isActive ? '0.9' : '0.4';
+                visualizerBars[i].style.backgroundColor = `rgba(0, 136, ${blue}, ${opacity})`;
+            }
+            
+            // Update visualizer container class
+            const container = document.getElementById('visualizer-container');
+            if (isActive) {
+                container.classList.add('active');
+            } else {
+                container.classList.remove('active');
+            }
+            
+            // Add pulsing effect during active listening
+            if (isActive) {
+                for (let i = 0; i < visualizerBars.length; i++) {
+                    // Create more dynamic animation for active listening
+                    const centerDistance = Math.abs(i - (visualizerBars.length / 2));
+                    const pulseEffect = Math.sin(Date.now() / 200 + i * 0.2) * 20;
+                    const height = Math.max(5, Math.floor(maxHeight - centerDistance * 1.5 + pulseEffect));
+                    visualizerBars[i].style.height = height + 'px';
+                }
+            }
+        }
+        
+        // Toggle always-listening mode
+        function toggleAlwaysListening() {
+            isAlwaysListening = !isAlwaysListening;
+            
+            const voiceButton = document.getElementById('voice-button');
+            const listenMode = document.getElementById('listen-mode');
+            
+            if (isAlwaysListening) {
+                voiceButton.classList.add('always-listening');
+                listenMode.textContent = 'Always Listening';
+                updateVoiceStatus('Listening for wake word...');
+                startWakeWordRecognition();
+                addSystemMessage("Always-listening mode activated. Say 'Hey Max' to begin.");
+            } else {
+                voiceButton.classList.remove('always-listening');
+                listenMode.textContent = 'Listen Once';
+                updateVoiceStatus('Click Listen to start');
+                stopAllRecognition();
+                addSystemMessage("Always-listening mode deactivated.");
+            }
+        }
+        
+        // Start wake word recognition
+        function startWakeWordRecognition() {
+            try {
+                if (isAlwaysListening && !isListening) {
+                    wakeWordRecognition.start();
+                    updateVoiceStatus('Listening for wake word...');
+                }
+            } catch (e) {
+                console.error("Error starting wake word recognition:", e);
+            }
+        }
+        
+        // Start command recognition
+        function startCommandRecognition() {
+            try {
+                if (isAlwaysListening) {
+                    isListening = true;
+                    document.getElementById('voice-button').classList.add('listening');
+                    updateVoiceStatus('Listening for command...');
+                    
+                    // Remove any existing live transcript
+                    const liveTranscript = document.getElementById('live-transcript');
+                    if (liveTranscript) {
+                        liveTranscript.remove();
+                    }
+                    
+                    // Short delay to make sure wake word recognition is stopped
+                    setTimeout(() => {
+                        recognition.start();
+                    }, 200);
+                }
+            } catch (e) {
+                console.error("Error starting command recognition:", e);
+                isListening = false;
+                document.getElementById('voice-button').classList.remove('listening');
+                
+                // Go back to wake word listening
+                startWakeWordRecognition();
+            }
+        }
+        
+        // Stop all recognition
+        function stopAllRecognition() {
+            try {
+                recognition.stop();
+            } catch (e) {}
+            
+            try {
+                wakeWordRecognition.stop();
+            } catch (e) {}
+            
+            isListening = false;
+            document.getElementById('voice-button').classList.remove('listening');
+            deactivateWakeIndicator();
+        }
+        
+        // Process voice command
+        function processVoiceCommand(transcript) {
+            console.log("Processing command:", transcript);
+            
+            const lowerTranscript = transcript.toLowerCase().trim();
+            
+            // Handle special commands
+            if (lowerTranscript.includes("stop listening") || lowerTranscript.includes("stop listening mode")) {
+                toggleAlwaysListening();
+                return;
+            }
+            
+            if (lowerTranscript.includes("clear chat") || lowerTranscript.includes("clear the chat")) {
+                clearChat();
+                speakResponse("Chat cleared.");
+                return;
+            }
+            
+            if (lowerTranscript.includes("mute") && !lowerTranscript.includes("unmute")) {
+                document.getElementById('speak-toggle').checked = false;
+                speakResponse("Voice responses muted.");
+                return;
+            }
+            
+            if (lowerTranscript.includes("unmute")) {
+                document.getElementById('speak-toggle').checked = true;
+                speakResponse("Voice responses activated.");
+                return;
+            }
+            
+            // Regular query - add to chat and send to server
+            document.getElementById('user-input').value = transcript;
+            sendMessage();
+        }
+        
+        // Update live transcript display
+        function updateLiveTranscript(text, isFinal) {
+            // Add or update a live transcript element in the chat container
+            let liveTranscript = document.getElementById('live-transcript');
+            
+            if (!liveTranscript) {
+                // Create new live transcript element
+                liveTranscript = document.createElement('div');
+                liveTranscript.id = 'live-transcript';
+                liveTranscript.className = 'message user-message';
+                liveTranscript.style.opacity = '0.8';
+                liveTranscript.style.borderStyle = 'dashed';
+                liveTranscript.style.borderWidth = '2px';
+                
+                // Add a "Hearing:" label
+                const label = document.createElement('div');
+                label.className = 'transcript-label';
+                label.style.fontSize = '12px';
+                label.style.color = '#aaa';
+                label.style.marginBottom = '5px';
+                label.textContent = 'Hearing:';
+                liveTranscript.appendChild(label);
+                
+                // Add the content span
+                const content = document.createElement('div');
+                content.className = 'transcript-content';
+                liveTranscript.appendChild(content);
+                
+                // Add to chat container
+                document.getElementById('chat-container').appendChild(liveTranscript);
+            }
+            
+            // Update content
+            const content = liveTranscript.querySelector('.transcript-content');
+            content.textContent = text || 'Listening...';
+            
+            // If final, mark it as final
+            if (isFinal) {
+                liveTranscript.style.opacity = '1';
+                liveTranscript.style.borderStyle = 'solid';
+                liveTranscript.querySelector('.transcript-label').textContent = 'You said:';
+            }
+            
+            // Scroll to bottom
+            document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
+        }
+        
+        // Update what the wake word listener is hearing
+        function updateWakeWordDisplay(text) {
+            if (!text) return;
+            
+            // Only update if we're in always-listening mode and not actively listening for a command
+            if (!isAlwaysListening || isListening) return;
+            
+            let wakeDisplay = document.getElementById('wake-word-display');
+            
+            if (!wakeDisplay) {
+                // Create new wake word display element
+                wakeDisplay = document.createElement('div');
+                wakeDisplay.id = 'wake-word-display';
+                wakeDisplay.className = 'system-message';
+                wakeDisplay.style.fontSize = '12px';
+                wakeDisplay.style.opacity = '0.6';
+                wakeDisplay.style.fontStyle = 'italic';
+                
+                // Add to chat container
+                document.getElementById('chat-container').appendChild(wakeDisplay);
+            }
+            
+            // Update content
+            wakeDisplay.textContent = 'Hearing: ' + text;
+            
+            // Auto-remove after 2 seconds
+            setTimeout(() => {
+                if (wakeDisplay && wakeDisplay.parentNode) {
+                    wakeDisplay.remove();
+                }
+            }, 2000);
+        }
+        
+        // Add system message
+        function addSystemMessage(text) {
+            const chatContainer = document.getElementById('chat-container');
+            const systemMessage = document.createElement('div');
+            systemMessage.className = 'system-message';
+            systemMessage.textContent = text;
+            chatContainer.appendChild(systemMessage);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                systemMessage.style.opacity = '0';
+                setTimeout(() => {
+                    systemMessage.remove();
+                }, 500);
+            }, 5000);
+        }
+        
+        // Clear chat
+        function clearChat() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.innerHTML = '';
+            const welcomeMessage = document.createElement('div');
+            welcomeMessage.className = 'message bot-message';
+            welcomeMessage.textContent = "Chat cleared. How can I assist you?";
+            chatContainer.appendChild(welcomeMessage);
+        }
+        
+        // Activate wake indicator
+        function activateWakeIndicator() {
+            const indicator = document.getElementById('wake-indicator');
+            indicator.classList.add('active');
+            
+            // Visual feedback only - no sound
+            const visualizer = document.getElementById('visualizer-container');
+            visualizer.classList.add('active');
+        }
+        
+        // Deactivate wake indicator
+        function deactivateWakeIndicator() {
+            const indicator = document.getElementById('wake-indicator');
+            indicator.classList.remove('active');
+            
+            // Deactivate visualizer effect
+            const visualizer = document.getElementById('visualizer-container');
+            visualizer.classList.remove('active');
+        }
+        
+        // Update voice status display
+        function updateVoiceStatus(message) {
+            document.getElementById('voice-status').textContent = message;
+        }
+        
+        // Speak text if enabled
+        function speakResponse(text) {
+            if (document.getElementById('speak-toggle').checked && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Send message to backend
+        function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const chatContainer = document.getElementById('chat-container');
+            const loader = document.getElementById('loader');
+            
+            if (!userInput.value.trim()) return;
+            
+            // Remove the live transcript
+            const liveTranscript = document.getElementById('live-transcript');
+            if (liveTranscript) {
+                liveTranscript.remove();
+            }
+            
+            // Add user message to chat
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = userInput.value;
+            chatContainer.appendChild(userMessage);
+            
+            // Show loader
+            loader.style.display = 'inline-block';
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Cancel any ongoing speech when sending a new message
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            
+            // Send request to server
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prompt: userInput.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loader
+                loader.style.display = 'none';
+                
+                // Add bot response to chat
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message';
+                botMessage.textContent = data.response;
+                chatContainer.appendChild(botMessage);
+                
+                // Speak the response
+                speakResponse(data.response);
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // Clear input
+                userInput.value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loader.style.display = 'none';
+                
+                // Add error message
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'message bot-message';
+                errorMessage.textContent = 'Sorry, there was an error processing your request.';
+                chatContainer.appendChild(errorMessage);
+                
+                // Speak the error
+                speakResponse('Sorry, there was an error processing your request.');
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        }
+        
+        // Add a direct listen button (bypass wake word)
+        function addDirectListenButton() {
+            // Create a new button
+            const directListenBtn = document.createElement('button');
+            directListenBtn.textContent = 'Listen Now';
+            directListenBtn.id = 'direct-listen-btn';
+            
+            // Add listener
+            directListenBtn.addEventListener('click', function() {
+                // Stop wake word recognition
+                try {
+                    wakeWordRecognition.stop();
+                } catch (e) {}
+                
+                // Start command recognition directly
+                isListening = true;
+                document.getElementById('voice-button').classList.add('listening');
+                updateVoiceStatus('Listening for command...');
+                
+                // Remove any existing live transcript
+                const liveTranscript = document.getElementById('live-transcript');
+                if (liveTranscript) {
+                    liveTranscript.remove();
+                }
+                
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                        activateWakeIndicator();
+                    } catch (e) {
+                        console.error("Error starting direct recognition:", e);
+                        isListening = false;
+                        document.getElementById('voice-button').classList.remove('listening');
+                        deactivateWakeIndicator();
+                        
+                        if (isAlwaysListening) {
+                            startWakeWordRecognition();
+                        }
+                    }
+                }, 200);
+            });
+            
+            // Add to UI
+            const inputContainer = document.querySelector('.input-container');
+            const loader = document.getElementById('loader');
+            inputContainer.insertBefore(directListenBtn, loader);
+        }
+        
+        // Send message when pressing Enter
+        document.getElementById('user-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Initialize speech recognition on page load
+        window.onload = function() {
+            initSpeechRecognition();
+            addDirectListenButton();
+        };
+    </script>
+</body>
+</html>
