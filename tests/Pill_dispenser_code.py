@@ -28,7 +28,7 @@ def on_message(client, userdata, msg):
         slot_num = int(command)
         if 1 <= slot_num <= 7:
             set_servo_angle(slotAngles[slot_num])
-
+    if command == "room1": #this was nathans thought on how we can integrate the movement code.
 
 MQTT_BROKER = "localhost"
 MQTT_TOPIC = "pill_dispenser1"
