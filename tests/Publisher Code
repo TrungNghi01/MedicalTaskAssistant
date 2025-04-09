@@ -3,7 +3,8 @@ import paho.mqtt.client as mqtt
 import threading
 
 # MQTT Configuration
-MQTT_BROKER = "172.20.10.2"
+MQTT_BROKER = "172.20.10.5"
+MQTT_PORT = 1883
 MQTT_TOPIC = "pill_dispenser1"
 client = None  # Global MQTT client
 
@@ -59,6 +60,13 @@ for i, (text, command) in enumerate(buttons):
     )
     btn.grid(row=i // 3, column=i % 3, padx=5, pady=5)  # Smaller padding
 
+# Add the line tracking button
+line_tracking_btn = tk.Button(
+    root, text="Room 1", font=("Arial", 16), bg="lightgreen", fg="black",
+    command=lambda: send_command("Room 1")  # Command for activating line tracking
+)
+line_tracking_btn.pack(pady=5)
+
 # Exit Button (Smaller and positioned at bottom)
 exit_btn = tk.Button(root, text="Exit", font=("Arial", 16), bg="red", fg="white", 
                      command=root.quit, width=8, height=2)
@@ -66,3 +74,4 @@ exit_btn.pack(pady=5)
 
 print("GUI is starting")
 root.mainloop()
+
