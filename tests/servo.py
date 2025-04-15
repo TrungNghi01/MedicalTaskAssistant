@@ -20,7 +20,8 @@ def rotate_servo():
 
 def rotate_servo_by_keyboard():
     try:
-        angles = [-89, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90]  # List of angles
+        angles = [-90, -45, -15, 20, 75, 90]  # List of angles
+        # angles = [0, 45, 90, 135, 180, 215, 275, 315, 360]  # List of angles
         index = 0  # Index to track the current angle
 
         while True:
