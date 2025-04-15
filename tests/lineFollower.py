@@ -40,14 +40,27 @@ class LineFollower:
         # Crop the bottom portion of the frame (where the line is most likely to be)
         height, width = mask.shape
         crop_height = int(height * 0.5)  # Use bottom 50% of image
+        crop_width = int(width * 0.5)    # Use middle 50% of width
+
+        # Calculate the start and end points to keep the ROI centered
+        start_x = int((width - crop_width) / 2)
+        end_x = start_x + crop_width
+        
         roi = mask[height - crop_height:height, 0:width]
         
         # Find contours in the ROI
         contours, _ = cv2.findContours(roi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         # Draw region of interest on original frame for visualization
-        cv2.rectangle(frame, (0, height - crop_height), (width, height), (0, 255, 0), 2)
+        # cv2.rectangle(frame, (0, height - crop_height), (width, height), (0, 255, 0), 2)
         
+        # Draw region of interest on original frame for visualization
+        cv2.rectangle(frame, 
+              (start_x, height - crop_height),  # Top-left point of rectangle
+              (end_x, height),                  # Bottom-right point of rectangle
+              (0, 255, 0), 2)                   # Green color, 2px thickness
+
+
         if contours:
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
@@ -70,8 +83,8 @@ class LineFollower:
     def follow_line(self):
         try:
             counter = 0
-            # while counter < 100:  # Run for a limited number of frames
-            while True:
+            while counter < 100:  # Run for a limited number of frames
+            # while True:
                 # Capture frame
                 ret, frame = self.cap.read()
                 if not ret:
