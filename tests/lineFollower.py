@@ -137,9 +137,25 @@ class LineFollower:
             self.cap.release()
             cv2.destroyAllWindows()
             fc.stop()
-            
+
+def move_forward_briefly(speed=10, duration=0.5):
+    """
+    Move the car forward for a specified duration.
+    
+    Args:
+        speed (int): Speed of the car (default: 10)
+        duration (float): Duration in seconds (default: 0.5)
+    """
+    # Move forward at the specified speed
+    fc.forward(speed)
+    # Wait for the specified duration
+    time.sleep(duration)    
+    # Stop the car
+    fc.stop()
+
 if __name__ == "__main__":
     # Create and run the line follower
     line_follower = LineFollower()
     line_follower.follow_line()
+    move_forward_briefly()
     print("Active pill dispenser")
