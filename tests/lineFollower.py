@@ -46,7 +46,8 @@ class LineFollower:
         start_x = int((width - crop_width) / 2)
         end_x = start_x + crop_width
         
-        roi = mask[height - crop_height:height, 0:width]
+        # roi = mask[height - crop_height:height, 0:width]
+        roi = mask[height - crop_height:height, start_x:end_x]
         
         # Find contours in the ROI
         contours, _ = cv2.findContours(roi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -68,8 +69,13 @@ class LineFollower:
             # Calculate the centroid of the contour
             M = cv2.moments(largest_contour)
             if M["m00"] != 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"]) + (height - crop_height)  # Adjust y-coordinate to original frame
+                # Calculate centroid relative to the ROI
+                cx_roi = int(M["m10"] / M["m00"])
+                cy_roi = int(M["m01"] / M["m00"])
+                
+                # Convert ROI coordinates to frame coordinates
+                cx = cx_roi + start_x  # Add the x offset of ROI
+                cy = cy_roi + (height - crop_height)  # Add the y offset of ROI
                 
                 # Draw centroid on the frame
                 cv2.circle(frame, (cx, cy), 5, (0, 0, 255), -1)
@@ -81,81 +87,81 @@ class LineFollower:
         return frame, None
     
     def follow_line(self):
-        try:
-            counter = 0
-            while counter < 100:  # Run for a limited number of frames
-            # while True:
-                # Capture frame
-                ret, frame = self.cap.read()
-                if not ret:
-                    print("Failed to grab frame")
-                    break
+        counter = 0
+        while counter < 100:  # Run for a limited number of frames
+        # while True:
+            # Capture frame
+            ret, frame = self.cap.read()
+            if not ret:
+                print("Failed to grab frame")
+                break
+            
+            # Detect line and calculate error
+            frame, error = self.detect_line(frame)
+            
+            if error is not None:
+                # Calculate derivative of error (change in error)
+                error_derivative = error - self.last_error
+                self.last_error = error
                 
-                # Detect line and calculate error
-                frame, error = self.detect_line(frame)
+                # PID control (using only P and D terms here)
+                correction = self.kp * error + self.kd * error_derivative
                 
-                if error is not None:
-                    # Calculate derivative of error (change in error)
-                    error_derivative = error - self.last_error
-                    self.last_error = error
-                    
-                    # PID control (using only P and D terms here)
-                    correction = self.kp * error + self.kd * error_derivative
-                    
-                    # Decide direction based on correction value
-                    if abs(error) < 20:  # Line is approximately centered
-                        print("Moving forward")
-                        fc.forward(self.max_speed)
-                    elif error < 0:  # Line is to the left
-                        print(f"Turning left, error: {error}")
-                        fc.turn_left(self.max_speed)
-                        # fc.turn_left(min(abs(int(correction)), 100))
-                    else:  # Line is to the right
-                        print(f"Turning right, error: {error}")
-                        fc.turn_right(self.max_speed)
-                        # fc.turn_right(min(abs(int(correction)), 100))
+                # Decide direction based on correction value
+                if abs(error) < 20:  # Line is approximately centered
+                    print("Moving forward")
+                    fc.forward(self.max_speed)
+                elif error < 0:  # Line is to the left
+                    print(f"Turning left, error: {error}")
+                    fc.turn_left(self.max_speed)
+                    # fc.turn_left(min(abs(int(correction)), 100))
+                else:  # Line is to the right
+                    print(f"Turning right, error: {error}")
+                    fc.turn_right(self.max_speed)
+                    # fc.turn_right(min(abs(int(correction)), 100))
 
-                    counter = 0  # Reset counter if line is detected
-                else:
-                    # No line detected
-                    print("No line detected, stopping")
-                    fc.stop()
-                    counter += 1 # Increment counter if no line detected
+                counter = 0  # Reset counter if line is detected
+            else:
+                # No line detected
+                print("No line detected, stopping")
+                fc.stop()
+                counter += 1 # Increment counter if no line detected
+            
+            # Display the processed frame
+            cv2.imshow('Line Following', frame)
+            
+            # Break the loop on 'q' key press
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
                 
-                # Display the processed frame
-                cv2.imshow('Line Following', frame)
-                
-                # Break the loop on 'q' key press
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-                    
-                # Add small delay
-                time.sleep(0.01)
-                
-        finally:
-            # Clean up
-            self.cap.release()
-            cv2.destroyAllWindows()
-            fc.stop()
+            # Add small delay
+            time.sleep(0.01)
+            
 
-def move_forward_briefly(speed=10, duration=0.5):
-    """
-    Move the car forward for a specified duration.
-    
-    Args:
-        speed (int): Speed of the car (default: 10)
-        duration (float): Duration in seconds (default: 0.5)
-    """
-    # Move forward at the specified speed
-    fc.forward(speed)
-    # Wait for the specified duration
-    time.sleep(duration)    
-    # Stop the car
-    fc.stop()
+    def destroy(self):
+        self.cap.release()
+        cv2.destroyAllWindows()
+        fc.stop()
+
+
+    def move_forward_briefly(self):
+        """
+        Move the car forward for a specified duration.
+        
+        Args:
+            speed (int): Speed of the car (default: 10)
+            duration (float): Duration in seconds (default: 0.5)
+        """
+        # Move forward at the specified speed
+        fc.forward(self.max_speed)
+        # Wait for the specified duration
+        time.sleep(0.5)    
+        # Stop the car
+        fc.stop()
 
 if __name__ == "__main__":
     # Create and run the line follower
     line_follower = LineFollower()
     line_follower.follow_line()
-    move_forward_briefly()
+    line_follower.move_forward_briefly()
     print("Active pill dispenser")
