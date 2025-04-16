@@ -86,7 +86,7 @@ class LineFollower:
             
         return frame, None
     
-    def follow_line(self):
+    def follow_line(self, show_camera=False):
         counter = 0
         while counter < 100:  # Run for a limited number of frames
         # while True:
@@ -128,7 +128,8 @@ class LineFollower:
                 counter += 1 # Increment counter if no line detected
             
             # Display the processed frame
-            cv2.imshow('Line Following', frame)
+            if show_camera:
+                cv2.imshow('Line Following', frame)
             
             # Break the loop on 'q' key press
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -136,6 +137,11 @@ class LineFollower:
                 
             # Add small delay
             time.sleep(0.01)
+        
+        print("Releasing resources...")
+        self.cap.release()
+        cv2.destroyAllWindows()
+        fc.stop()
             
 
     def destroy(self):
@@ -162,6 +168,6 @@ class LineFollower:
 if __name__ == "__main__":
     # Create and run the line follower
     line_follower = LineFollower()
-    line_follower.follow_line()
+    line_follower.follow_line(show_camera=True)
     line_follower.move_forward_briefly()
     print("Active pill dispenser")
