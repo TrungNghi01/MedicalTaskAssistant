@@ -31,6 +31,9 @@ The **Autonomous Medication Distribution Robot** focuses on the following key ob
 - BPM Diagram:
 ![BPM Diagram](docs/bpm.png)
 
+- Custom Workflow Diagram: ![{467BE87B-7447-4AD1-BDCB-9125CD29E370}](https://github.com/user-attachments/assets/978388df-90f7-4f7a-82d0-c57dd25150f5)
+
+
 ### 6. Model Info
 
 - The files for creation of model is in the Model folder in github. There are 2 files for training the Model (i) "Gpt-v1.ipynb", (ii) "training.py" and (iii) 'extraction' is used for conversion of dataset.
